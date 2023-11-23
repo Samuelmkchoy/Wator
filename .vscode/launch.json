@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "/Users/mingkitchoy/Desktop/Year4/SEM1-Concurrent_Dev/Wator",
+      "program": "/Users/mingkitchoy/Desktop/Year4/SEM1-Concurrent_Dev/Wator/build/Debug/outDebug"
+    }
+  ]
+}
