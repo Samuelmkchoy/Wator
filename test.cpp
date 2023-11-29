@@ -50,24 +50,18 @@ const int EMPTY_ID = 0;
 const int FISH_ID = 1;
 const int SHARK_ID = 2;
 
+const int WORLD_SIZE = 100;
+
 // Function to initialize the world with fish and sharks
-void initializeWorld(int (&world)[100][100], int xdim, int ydim, int numFish, int numShark);
+void initializeWorld(int (&world)[WORLD_SIZE][WORLD_SIZE], int numFish, int numShark);
+void updateWorld(int (&world)[WORLD_SIZE][WORLD_SIZE]);
 
 int main()
 {
-    int xdim = 100;
-    int ydim = 100;
-    int WindowXSize = 800;
-    int WindowYSize = 600;
-    int cellXSize = WindowXSize / xdim;
-    int cellYSize = WindowYSize / ydim;
+    int world[WORLD_SIZE][WORLD_SIZE];
+    initializeWorld(world, 20, 10);
 
-    int world[100][100];
-
-    // Function to initialize the world with fish and sharks
-    initializeWorld(world, xdim, ydim, 20, 10); // Adjust the initial population numbers
-
-    sf::RenderWindow window(sf::VideoMode(WindowXSize, WindowYSize), "SFML Wa-Tor world");
+    sf::RenderWindow window(sf::VideoMode(WORLD_SIZE * 8, WORLD_SIZE * 8), "SFML Wa-Tor world");
 
     while (window.isOpen())
     {
@@ -78,32 +72,17 @@ int main()
                 window.close();
         }
 
-        // Simulation logic goes here...
-        int newWorld[100][100];
-
-        for (int i = 0; i < xdim; ++i)
-        {
-            for (int k = 0; k < ydim; ++k)
-            {
-                // Implement Wa-Tor simulation rules
-                // (fish movement, shark movement, reproduction, starvation, etc.)
-                // Update newWorld based on the rules
-                newWorld[i][k] = world[i][k]; // Placeholder, replace with actual logic
-            }
-        }
-
-        // Copy the updated world to the original array
-        std::memcpy(world, newWorld, sizeof(world));
+        updateWorld(world);
 
         window.clear(sf::Color::Black);
 
         // Draw the world based on the updated state
-        for (int i = 0; i < xdim; ++i)
+        for (int i = 0; i < WORLD_SIZE; ++i)
         {
-            for (int k = 0; k < ydim; ++k)
+            for (int k = 0; k < WORLD_SIZE; ++k)
             {
-                sf::RectangleShape rectangle(sf::Vector2f(cellXSize, cellYSize));
-                rectangle.setPosition(i * cellXSize, k * cellYSize);
+                sf::RectangleShape rectangle(sf::Vector2f(8, 8));
+                rectangle.setPosition(i * 8, k * 8);
 
                 // Set colors based on cell contents
                 if (world[i][k] == FISH_ID)
@@ -122,14 +101,14 @@ int main()
 }
 
 // Function to initialize the world with fish and sharks
-void initializeWorld(int (&world)[100][100], int xdim, int ydim, int numFish, int numShark)
+void initializeWorld(int (&world)[WORLD_SIZE][WORLD_SIZE], int numFish, int numShark)
 {
-    std::srand(std::time(0)); // Seed the random number generator
+    std::srand(std::time(0));
 
     // Initialize the world with empty spaces
-    for (int i = 0; i < xdim; ++i)
+    for (int i = 0; i < WORLD_SIZE; ++i)
     {
-        for (int k = 0; k < ydim; ++k)
+        for (int k = 0; k < WORLD_SIZE; ++k)
         {
             world[i][k] = EMPTY_ID;
         }
@@ -138,16 +117,35 @@ void initializeWorld(int (&world)[100][100], int xdim, int ydim, int numFish, in
     // Initialize fish and sharks randomly in the world
     for (int i = 0; i < numFish; ++i)
     {
-        int x = std::rand() % xdim;
-        int y = std::rand() % ydim;
+        int x = std::rand() % WORLD_SIZE;
+        int y = std::rand() % WORLD_SIZE;
         world[x][y] = FISH_ID; // Set ID for fish
     }
 
     for (int i = 0; i < numShark; ++i)
     {
-        int x = std::rand() % xdim;
-        int y = std::rand() % ydim;
+        int x = std::rand() % WORLD_SIZE;
+        int y = std::rand() % WORLD_SIZE;
         world[x][y] = SHARK_ID; // Set ID for shark
+    }
+}
+
+void updateWorld(int (&world)[WORLD_SIZE][WORLD_SIZE])
+{
+    // Placeholder: Replace this with your Wa-Tor simulation logic
+    // This is a simplified example, and you need to implement the actual logic
+    for (int i = 0; i < WORLD_SIZE; ++i)
+    {
+        for (int k = 0; k < WORLD_SIZE; ++k)
+        {
+            // Randomly move fish or sharks (you should replace this with your logic)
+            if (world[i][k] == FISH_ID || world[i][k] == SHARK_ID)
+            {
+                int newI = (i + rand() % 3 - 1 + WORLD_SIZE) % WORLD_SIZE;
+                int newK = (k + rand() % 3 - 1 + WORLD_SIZE) % WORLD_SIZE;
+                std::swap(world[i][k], world[newI][newK]);
+            }
+        }
     }
 }
 
