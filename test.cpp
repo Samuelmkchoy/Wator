@@ -43,16 +43,14 @@
 #include <SFML/Graphics.hpp>
 #include <cstdlib>
 #include <ctime>
-#include <cstring>
+#include <iostream>
 
-// Define constants for cell contents
 const int EMPTY_ID = 0;
 const int FISH_ID = 1;
 const int SHARK_ID = 2;
 
 const int WORLD_SIZE = 100;
 
-// Function to initialize the world with fish and sharks
 void initializeWorld(int (&world)[WORLD_SIZE][WORLD_SIZE], int numFish, int numShark);
 void updateWorld(int (&world)[WORLD_SIZE][WORLD_SIZE]);
 
@@ -62,6 +60,16 @@ int main()
     initializeWorld(world, 20, 10);
 
     sf::RenderWindow window(sf::VideoMode(WORLD_SIZE * 8, WORLD_SIZE * 8), "SFML Wa-Tor world");
+
+    sf::Font font;
+    if (!font.loadFromFile("arial.ttf")) // the font file path 
+    {
+        std::cerr << "Error loading font" << std::endl;
+        return 1;
+    }
+
+    sf::Text text("", font, 20);
+    text.setFillColor(sf::Color::White);
 
     while (window.isOpen())
     {
@@ -74,7 +82,7 @@ int main()
 
         updateWorld(world);
 
-        window.clear(sf::Color::Black);
+        window.clear(sf::Color::Blue); // Set water color to blue
 
         // Draw the world based on the updated state
         for (int i = 0; i < WORLD_SIZE; ++i)
@@ -94,13 +102,30 @@ int main()
             }
         }
 
+        // Display current number of fish and sharks
+        int numFish = 0;
+        int numShark = 0;
+
+        for (int i = 0; i < WORLD_SIZE; ++i)
+        {
+            for (int k = 0; k < WORLD_SIZE; ++k)
+            {
+                if (world[i][k] == FISH_ID)
+                    numFish++;
+                else if (world[i][k] == SHARK_ID)
+                    numShark++;
+            }
+        }
+
+        text.setString("Fish: " + std::to_string(numFish) + " | Sharks: " + std::to_string(numShark));
+        window.draw(text);
+
         window.display();
     }
 
     return 0;
 }
 
-// Function to initialize the world with fish and sharks
 void initializeWorld(int (&world)[WORLD_SIZE][WORLD_SIZE], int numFish, int numShark)
 {
     std::srand(std::time(0));
@@ -132,22 +157,61 @@ void initializeWorld(int (&world)[WORLD_SIZE][WORLD_SIZE], int numFish, int numS
 
 void updateWorld(int (&world)[WORLD_SIZE][WORLD_SIZE])
 {
-    // Placeholder: Replace this with your Wa-Tor simulation logic
-    // This is a simplified example, and you need to implement the actual logic
     for (int i = 0; i < WORLD_SIZE; ++i)
     {
         for (int k = 0; k < WORLD_SIZE; ++k)
         {
-            // Randomly move fish or sharks (you should replace this with your logic)
-            if (world[i][k] == FISH_ID || world[i][k] == SHARK_ID)
+            if (world[i][k] == FISH_ID)
             {
-                int newI = (i + rand() % 3 - 1 + WORLD_SIZE) % WORLD_SIZE;
-                int newK = (k + rand() % 3 - 1 + WORLD_SIZE) % WORLD_SIZE;
-                std::swap(world[i][k], world[newI][newK]);
+                // Fish behavior
+                int newX = i + rand() % 3 - 1;
+                int newY = k + rand() % 3 - 1;
+
+                if (newX >= 0 && newX < WORLD_SIZE && newY >= 0 && newY < WORLD_SIZE && world[newX][newY] == EMPTY_ID)
+                {
+                    world[newX][newY] = FISH_ID; // Fish moves
+                    world[i][k] = EMPTY_ID;      // Original position becomes empty
+                }
+            }
+            else if (world[i][k] == SHARK_ID)
+            {
+                // Shark behavior
+                int newX, newY;
+
+                // Check for adjacent fish
+                for (int dx = -1; dx <= 1; ++dx)
+                {
+                    for (int dy = -1; dy <= 1; ++dy)
+                    {
+                        newX = i + dx;
+                        newY = k + dy;
+
+                        if (newX >= 0 && newX < WORLD_SIZE && newY >= 0 && newY < WORLD_SIZE && world[newX][newY] == FISH_ID)
+                        {
+                            // Shark moves to adjacent fish and eats it
+                            world[newX][newY] = SHARK_ID;
+                            world[i][k] = EMPTY_ID;
+                            break;
+                        }
+                    }
+                }
+
+                if (world[i][k] == SHARK_ID) // Shark did not eat fish, move randomly
+                {
+                    newX = i + rand() % 3 - 1;
+                    newY = k + rand() % 3 - 1;
+
+                    if (newX >= 0 && newX < WORLD_SIZE && newY >= 0 && newY < WORLD_SIZE && world[newX][newY] == EMPTY_ID)
+                    {
+                        world[newX][newY] = SHARK_ID; // Shark moves
+                        world[i][k] = EMPTY_ID;       // Original position becomes empty
+                    }
+                }
             }
         }
     }
 }
+
 
 
 
