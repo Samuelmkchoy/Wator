@@ -39,180 +39,218 @@
 // https://learnsfmcl.com/
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Code:
-
+#include <iostream>
 #include <SFML/Graphics.hpp>
 #include <cstdlib>
 #include <ctime>
-#include <iostream>
+
 
 const int EMPTY_ID = 0;
 const int FISH_ID = 1;
 const int SHARK_ID = 2;
+const int REPRODUCTION_AGE = 5;
+const int SHARK_STARVATION = 3; // Adjust as needed
 
-const int WORLD_SIZE = 100;
+struct Fish
+{
+    int age;
+};
 
-void initializeWorld(int (&world)[WORLD_SIZE][WORLD_SIZE], int numFish, int numShark);
-void updateWorld(int (&world)[WORLD_SIZE][WORLD_SIZE]);
+struct Shark
+{
+    int age;
+    int energy;
+};
+
+void initializeWorld(Fish**& fishArray, Shark**& sharkArray, int xdim, int ydim, int numFish, int numShark);
+void cleanupWorld(Fish** fishArray, Shark** sharkArray, int xdim);
 
 int main()
 {
-    int world[WORLD_SIZE][WORLD_SIZE];
-    initializeWorld(world, 20, 10);
+    int xdim = 100;
+    int ydim = 100;
+    int WindowXSize = 800;
+    int WindowYSize = 600;
+    int cellXSize = WindowXSize / xdim;
+    int cellYSize = WindowYSize / ydim;
 
-    sf::RenderWindow window(sf::VideoMode(WORLD_SIZE * 8, WORLD_SIZE * 8), "SFML Wa-Tor world");
-
-    sf::Font font;
-    if (!font.loadFromFile("arial.ttf")) // the font file path 
+    Fish** fishArray = new Fish*[xdim];
+    for (int i = 0; i < xdim; ++i)
     {
-        std::cerr << "Error loading font" << std::endl;
-        return 1;
+        fishArray[i] = new Fish[ydim]();
     }
 
-    sf::Text text("", font, 20);
-    text.setFillColor(sf::Color::Black);
+    Shark** sharkArray = new Shark*[xdim];
+    for (int i = 0; i < xdim; ++i)
+    {
+        sharkArray[i] = new Shark[ydim]();
+    }
 
- while (window.isOpen())
-{
-    sf::Event event;
-    while (window.pollEvent(event))
+    initializeWorld(fishArray, sharkArray, xdim, ydim, 20, 10);
+
+    sf::RenderWindow window(sf::VideoMode(WindowXSize, WindowYSize), "SFML Wa-Tor world");
+
+    while (window.isOpen())
+    {
+        sf::Event event;
+        while (window.pollEvent(event))
         {
             if (event.type == sf::Event::Closed)
                 window.close();
         }
 
-        updateWorld(world);
-
-        window.clear(sf::Color::Blue); // Set water color to blue
-
-        // Draw the world based on the updated state
-        for (int i = 0; i < WORLD_SIZE; ++i)
+        for (int i = 0; i < xdim; ++i)
         {
-            for (int k = 0; k < WORLD_SIZE; ++k)
+            for (int k = 0; k < ydim; ++k)
             {
-                sf::RectangleShape rectangle(sf::Vector2f(8, 8));
-                rectangle.setPosition(i * 8, k * 8);
+                if (fishArray[i][k].age >= REPRODUCTION_AGE)
+                {
+                    int newX = i + rand() % 3 - 1;
+                    int newY = k + rand() % 3 - 1;
 
-                // Set colors based on cell contents
-                if (world[i][k] == FISH_ID)
+                    if (newX >= 0 && newX < xdim && newY >= 0 && newY < ydim && fishArray[newX][newY].age == 0)
+                    {
+                        fishArray[newX][newY].age = 1;
+                    }
+                }
+
+                // Shark movement logic
+                if (sharkArray[i][k].energy > 0)
+                {
+                    int newX = i + rand() % 3 - 1;
+                    int newY = k + rand() % 3 - 1;
+
+                    // Check if the new position is within bounds
+                    if (newX >= 0 && newX < xdim && newY >= 0 && newY < ydim)
+                    {
+                        // If the new position is occupied by a fish, eat it
+                        if (fishArray[newX][newY].age > 0)
+                        {
+                            sharkArray[newX][newY].energy += 2; // Gain energy from eating fish
+                            fishArray[newX][newY].age = 0;      // Remove the eaten fish
+                        }
+                        else if (fishArray[newX][newY].age == 0 && sharkArray[newX][newY].energy == 0)
+                        {
+                            // If the new position is unoccupied, move there and lose energy
+                            sharkArray[newX][newY] = sharkArray[i][k];
+                            sharkArray[i][k].energy--;
+                        }
+                    }
+                }
+                if (fishArray[i][k].age > 0)
+                {
+                    fishArray[i][k].age++;
+                }
+
+                // Shark energy decrement
+                if (sharkArray[i][k].energy > 0)
+                {
+                    sharkArray[i][k].energy--;
+                }
+
+                // Shark death if energy reaches zero
+                if (sharkArray[i][k].energy == 0)
+                {
+                    sharkArray[i][k].age = 0;
+                }
+            }
+        }
+
+        window.clear(sf::Color(0, 0, 255));
+
+        int fishCount = 0;
+        int sharkCount = 0;
+
+        for (int i = 0; i < xdim; ++i)
+        {
+            for (int k = 0; k < ydim; ++k)
+            {
+                sf::RectangleShape rectangle(sf::Vector2f(cellXSize, cellYSize));
+                rectangle.setPosition(i * cellXSize, k * cellYSize);
+
+                // Fish and shark visualization
+                if (fishArray[i][k].age > 0)
+                {
                     rectangle.setFillColor(sf::Color::Green);
-                else if (world[i][k] == SHARK_ID)
+                    fishCount++;
+                }
+                else if (sharkArray[i][k].age > 0)
+                {
                     rectangle.setFillColor(sf::Color::Red);
+                    sharkCount++;
+                }
+                else
+                {
+                    rectangle.setFillColor(sf::Color::Blue);
+                }
 
                 window.draw(rectangle);
             }
         }
 
-        // Display current number of fish and sharks
-        int numFish = 0;
-        int numShark = 0;
-
-        for (int i = 0; i < WORLD_SIZE; ++i)
-        {
-            for (int k = 0; k < WORLD_SIZE; ++k)
-            {
-                if (world[i][k] == FISH_ID)
-                    numFish++;
-                else if (world[i][k] == SHARK_ID)
-                    numShark++;
-            }
+        // Display fish and shark counts
+        sf::Font font;
+        if (!font.loadFromFile("arial.ttf")) {
+            std::cerr << "Error loading font\n";
+            return 1;
         }
 
-        text.setString("Fish: " + std::to_string(numFish) + " | Sharks: " + std::to_string(numShark));
-        text.setPosition(10, 10); // Set position to top-left corner
-        window.draw(text);
+        sf::Text fishText, sharkText;
+        fishText.setFont(font);
+        sharkText.setFont(font);
+
+        fishText.setString("Fish: " + std::to_string(fishCount));
+        sharkText.setString("Sharks: " + std::to_string(sharkCount));
+
+        fishText.setCharacterSize(20);
+        sharkText.setCharacterSize(20);
+
+        fishText.setPosition(10, 10);
+        sharkText.setPosition(10, 40);
+
+        window.draw(fishText);
+        window.draw(sharkText);
 
         window.display();
     }
 
+    cleanupWorld(fishArray, sharkArray, xdim);
 
     return 0;
 }
 
-void initializeWorld(int (&world)[WORLD_SIZE][WORLD_SIZE], int numFish, int numShark)
+void initializeWorld(Fish**& fishArray, Shark**& sharkArray, int xdim, int ydim, int numFish, int numShark)
 {
     std::srand(std::time(0));
 
-    // Initialize the world with empty spaces
-    for (int i = 0; i < WORLD_SIZE; ++i)
-    {
-        for (int k = 0; k < WORLD_SIZE; ++k)
-        {
-            world[i][k] = EMPTY_ID;
-        }
-    }
-
-    // Initialize fish and sharks randomly in the world
     for (int i = 0; i < numFish; ++i)
     {
-        int x = std::rand() % WORLD_SIZE;
-        int y = std::rand() % WORLD_SIZE;
-        world[x][y] = FISH_ID; // Set ID for fish
+        int x = std::rand() % xdim;
+        int y = std::rand() % ydim;
+        fishArray[x][y].age = 1;
     }
 
     for (int i = 0; i < numShark; ++i)
     {
-        int x = std::rand() % WORLD_SIZE;
-        int y = std::rand() % WORLD_SIZE;
-        world[x][y] = SHARK_ID; // Set ID for shark
+        int x = std::rand() % xdim;
+        int y = std::rand() % ydim;
+        sharkArray[x][y].age = 1;
+        sharkArray[x][y].energy = 5; // Adjust initial shark energy as needed
     }
 }
 
-void updateWorld(int (&world)[WORLD_SIZE][WORLD_SIZE])
+void cleanupWorld(Fish** fishArray, Shark** sharkArray, int xdim)
 {
-    for (int i = 0; i < WORLD_SIZE; ++i)
+    for (int i = 0; i < xdim; ++i)
     {
-        for (int k = 0; k < WORLD_SIZE; ++k)
-        {
-            if (world[i][k] == FISH_ID)
-            {
-                // Fish behavior
-                int newX = i + rand() % 3 - 1;
-                int newY = k + rand() % 3 - 1;
-
-                if (newX >= 0 && newX < WORLD_SIZE && newY >= 0 && newY < WORLD_SIZE && world[newX][newY] == EMPTY_ID)
-                {
-                    world[newX][newY] = FISH_ID; // Fish moves
-                    world[i][k] = EMPTY_ID;      // Original position becomes empty
-                }
-            }
-            else if (world[i][k] == SHARK_ID)
-            {
-                // Shark behavior
-                int newX, newY;
-
-                // Check for adjacent fish
-                for (int dx = -1; dx <= 1; ++dx)
-                {
-                    for (int dy = -1; dy <= 1; ++dy)
-                    {
-                        newX = i + dx;
-                        newY = k + dy;
-
-                        if (newX >= 0 && newX < WORLD_SIZE && newY >= 0 && newY < WORLD_SIZE && world[newX][newY] == FISH_ID)
-                        {
-                            // Shark moves to adjacent fish and eats it
-                            world[newX][newY] = SHARK_ID;
-                            world[i][k] = EMPTY_ID;
-                            break;
-                        }
-                    }
-                }
-
-                if (world[i][k] == SHARK_ID) // Shark did not eat fish, move randomly
-                {
-                    newX = i + rand() % 3 - 1;
-                    newY = k + rand() % 3 - 1;
-
-                    if (newX >= 0 && newX < WORLD_SIZE && newY >= 0 && newY < WORLD_SIZE && world[newX][newY] == EMPTY_ID)
-                    {
-                        world[newX][newY] = SHARK_ID; // Shark moves
-                        world[i][k] = EMPTY_ID;       // Original position becomes empty
-                    }
-                }
-            }
-        }
+        delete[] fishArray[i];
+        delete[] sharkArray[i];
     }
+
+    delete[] fishArray;
+    delete[] sharkArray;
 }
+
 
 
 
