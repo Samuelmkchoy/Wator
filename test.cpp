@@ -69,12 +69,12 @@ int main()
     }
 
     sf::Text text("", font, 20);
-    text.setFillColor(sf::Color::White);
+    text.setFillColor(sf::Color::Black);
 
-    while (window.isOpen())
-    {
-        sf::Event event;
-        while (window.pollEvent(event))
+ while (window.isOpen())
+{
+    sf::Event event;
+    while (window.pollEvent(event))
         {
             if (event.type == sf::Event::Closed)
                 window.close();
@@ -118,10 +118,12 @@ int main()
         }
 
         text.setString("Fish: " + std::to_string(numFish) + " | Sharks: " + std::to_string(numShark));
+        text.setPosition(10, 10); // Set position to top-left corner
         window.draw(text);
 
         window.display();
     }
+
 
     return 0;
 }
