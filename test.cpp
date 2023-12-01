@@ -39,17 +39,21 @@
 // https://learnsfmcl.com/
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Code:
+
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include <cstdlib>
 #include <ctime>
 
-
 const int EMPTY_ID = 0;
 const int FISH_ID = 1;
 const int SHARK_ID = 2;
-const int REPRODUCTION_AGE = 5;
-const int SHARK_STARVATION = 3; // Adjust as needed
+
+const int REPRODUCTION_AGE = 1;
+const int FISH_MAX_AGE = 10;  // Maximum age for fish
+const int SHARK_STARVATION = 5;  // Number of iterations a shark can survive without eating
+const int SHARK_REPRODUCTION_AGE = 20;
+const int SHARK_ENERGY_GAIN = 0;
 
 struct Fish
 {
@@ -86,7 +90,7 @@ int main()
         sharkArray[i] = new Shark[ydim]();
     }
 
-    initializeWorld(fishArray, sharkArray, xdim, ydim, 20, 10);
+    initializeWorld(fishArray, sharkArray, xdim, ydim, 50, 5);
 
     sf::RenderWindow window(sf::VideoMode(WindowXSize, WindowYSize), "SFML Wa-Tor world");
 
@@ -103,18 +107,32 @@ int main()
         {
             for (int k = 0; k < ydim; ++k)
             {
-                if (fishArray[i][k].age >= REPRODUCTION_AGE)
+                // Fish reproduction and movement logic
+                if (fishArray[i][k].age > 0)
                 {
-                    int newX = i + rand() % 3 - 1;
-                    int newY = k + rand() % 3 - 1;
+                    // Increment fish age
+                    fishArray[i][k].age++;
 
-                    if (newX >= 0 && newX < xdim && newY >= 0 && newY < ydim && fishArray[newX][newY].age == 0)
+                    // Check if the fish can reproduce
+                    if (fishArray[i][k].age >= REPRODUCTION_AGE)
                     {
-                        fishArray[newX][newY].age = 1;
+                        int newX = i + rand() % 3 - 1;
+                        int newY = k + rand() % 3 - 1;
+
+                        // Check if the new position is within bounds
+                        if (newX >= 0 && newX < xdim && newY >= 0 && newY < ydim)
+                        {
+                            // If the new position is unoccupied, move there and reset age
+                            if (fishArray[newX][newY].age == 0)
+                            {
+                                fishArray[newX][newY].age = 1;
+                                fishArray[i][k].age = 0; // Leave the old position
+                            }
+                        }
                     }
                 }
 
-                // Shark movement logic
+                // Shark movement and hunting logic
                 if (sharkArray[i][k].energy > 0)
                 {
                     int newX = i + rand() % 3 - 1;
@@ -126,7 +144,7 @@ int main()
                         // If the new position is occupied by a fish, eat it
                         if (fishArray[newX][newY].age > 0)
                         {
-                            sharkArray[newX][newY].energy += 2; // Gain energy from eating fish
+                            sharkArray[newX][newY].energy += 1; // Gain energy from eating fish
                             fishArray[newX][newY].age = 0;      // Remove the eaten fish
                         }
                         else if (fishArray[newX][newY].age == 0 && sharkArray[newX][newY].energy == 0)
@@ -136,22 +154,43 @@ int main()
                             sharkArray[i][k].energy--;
                         }
                     }
-                }
-                if (fishArray[i][k].age > 0)
-                {
-                    fishArray[i][k].age++;
-                }
-
-                // Shark energy decrement
-                if (sharkArray[i][k].energy > 0)
-                {
-                    sharkArray[i][k].energy--;
+                    else
+                    {
+                        // If the new position is out of bounds, lose energy
+                        sharkArray[i][k].energy--;
+                    }
                 }
 
-                // Shark death if energy reaches zero
-                if (sharkArray[i][k].energy == 0)
+                // Shark reproduction logic
+                if (sharkArray[i][k].age >= SHARK_REPRODUCTION_AGE && sharkArray[i][k].energy >= SHARK_ENERGY_GAIN)
                 {
-                    sharkArray[i][k].age = 0;
+                    // Try to find a neighboring empty square
+                    for (int dx = -1; dx <= 1; ++dx)
+                    {
+                        for (int dy = -1; dy <= 1; ++dy)
+                        {
+                            int newX = i + dx;
+                            int newY = k + dy;
+
+                            // Check if the new position is within bounds
+                            if (newX >= 0 && newX < xdim && newY >= 0 && newY < ydim)
+                            {
+                                // If the new position is unoccupied, leave a new shark
+                                if (fishArray[newX][newY].age == 0 && sharkArray[newX][newY].age == 0)
+                                {
+                                    sharkArray[newX][newY].age = 1;
+                                    sharkArray[newX][newY].energy = sharkArray[i][k].energy;  // Initial energy for the new shark
+                                    sharkArray[i][k].energy -= SHARK_ENERGY_GAIN;              // Deduct energy from the parent
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Shark starvation logic
+                if (sharkArray[i][k].energy <= 0)
+                {
+                    sharkArray[i][k].age = 0; // Shark dies due to starvation
                 }
             }
         }
@@ -250,10 +289,5 @@ void cleanupWorld(Fish** fishArray, Shark** sharkArray, int xdim)
     delete[] fishArray;
     delete[] sharkArray;
 }
-
-
-
-
-
 // 
 // test.cpp ends here
