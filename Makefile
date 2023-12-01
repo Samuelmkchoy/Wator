@@ -4,11 +4,12 @@
 
 CXX = g++
 CPPFILES= test.cpp
+CPPFILES1= test1.cpp
 CPPFLAGS= -Wall
-LDFLAGS = -lsfml-graphics -lsfml-window -lsfml-system -L/path/to/llvm/lib -lgomp
-EXE= testApp
+LDFLAGS = -lsfml-graphics -lsfml-window -lsfml-system -I/opt/homebrew/Cellar/sfml/2.6.1/include
+EXE= prog2
+EXE1= prog
 
-SRCS=test.cpp
 OBJS=$(subst .cpp,.o,$(SRCS))
 
 #This rule says that each .o file depends on a .cpp file of the same name
@@ -18,6 +19,10 @@ OBJS=$(subst .cpp,.o,$(SRCS))
 
 
 ALL: $(OBJS)
-	$(CXX) $(OBJS) -o $(EXE) $(LDFLAGS)
+	$(CXX) $(CPPFILES) -o $(EXE1) $(LDFLAGS)
+	$(CXX) $(CPPFILES1) -o $(EXE) $(LDFLAGS)
 
+
+#$(CXX) $(OBJS) -o $(EXE) $(LDFLAGS)
+#g++ test.cpp -I/opt/homebrew/Cellar/sfml/2.6.1/include -o prog  -lsfml-graphics -lsfml-window -lsfml-system
 #g++ test.cpp -I/opt/homebrew/Cellar/sfml/2.6.1/include -o prog -L/opt/homebrew/Cellar/sfml/2.6.1/lib -lsfml-graphics -lsfml-window -lsfml-system
