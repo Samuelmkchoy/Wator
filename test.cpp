@@ -16,7 +16,6 @@ struct Organism
 {
     int id;
     int age;
-    // No energy parameter for sharks
 };
 
 void initializeWorld(Organism**& worldArray, int xdim, int ydim, int numFish, int numShark);
