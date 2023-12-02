@@ -3,12 +3,15 @@
 # I expect better from you!
 
 CXX = g++
-CPPFILES= test.cpp
 CPPFILES1= test1.cpp
+CPPFILES2= test2.cpp
+CPPFILES3= test3.cpp
+
 CPPFLAGS= -Wall
 LDFLAGS = -lsfml-graphics -lsfml-window -lsfml-system -I/opt/homebrew/Cellar/sfml/2.6.1/include
-EXE= prog2
-EXE1= prog
+EXE1= prog1
+EXE2= prog2
+EXE3= prog3
 
 OBJS=$(subst .cpp,.o,$(SRCS))
 
@@ -19,8 +22,10 @@ OBJS=$(subst .cpp,.o,$(SRCS))
 
 
 ALL: $(OBJS)
-	$(CXX) $(CPPFILES) -o $(EXE1) $(LDFLAGS)
-	$(CXX) $(CPPFILES1) -o $(EXE) $(LDFLAGS)
+	$(CXX) $(CPPFILES1) -o $(EXE1) $(LDFLAGS)
+	$(CXX) $(CPPFILES2) -o $(EXE2) $(LDFLAGS)
+	$(CXX) $(CPPFILES3) -o $(EXE3) $(LDFLAGS)
+
 
 
 #$(CXX) $(OBJS) -o $(EXE) $(LDFLAGS)
