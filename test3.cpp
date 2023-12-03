@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <ctime>
 
+
 const int WATER_ID = 0;
 const int FISH_ID = 1;
 const int SHARK_ID = 2;
@@ -35,7 +36,7 @@ int main(int argc, char* argv[])
     int sharkBreed = 8;
     int starve = 6;
     int gridSize = 100;
-    int numThreads = 1;
+    int numThreads = 4;
 
     // Parse command-line arguments
     if (argc >= 2) numShark = std::atoi(argv[1]);
