@@ -1,8 +1,19 @@
+
+/**
+ * @file main.cpp
+ * @brief The main file for the Wa-Tor simulation.
+ */
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include <cstdlib>
 #include <ctime>
 
+// ...
+
+/**
+ * @struct Organism
+ * @brief Represents an organism in the Wa-Tor simulation.
+ */
 
 const int WATER_ID = 0;
 const int FISH_ID = 1;
@@ -76,6 +87,14 @@ int main(int argc, char* argv[])
     return 0;
 }
 
+/**
+ * @brief Initializes the world with fish and sharks at random positions.
+ * @param worldArray The 2D array representing the world.
+ * @param xdim The width of the world.
+ * @param ydim The height of the world.
+ * @param numFish The number of fish to initialize.
+ * @param numShark The number of sharks to initialize.
+ */
 
 void initializeWorld(Organism**& worldArray, int xdim, int ydim, int numFish, int numShark)
 {
@@ -98,6 +117,11 @@ void initializeWorld(Organism**& worldArray, int xdim, int ydim, int numFish, in
     }
 }
 
+/**
+ * @brief Cleans up the allocated memory for the world array.
+ * @param worldArray The 2D array representing the world.
+ * @param xdim The width of the world.
+ */
 void cleanupWorld(Organism** worldArray, int xdim)
 {
     for (int i = 0; i < xdim; ++i)
@@ -108,6 +132,15 @@ void cleanupWorld(Organism** worldArray, int xdim)
     delete[] worldArray;
 }
 
+/**
+ * @brief Renders the current state of the world using SFML.
+ * @param window The SFML window to render in.
+ * @param worldArray The 2D array representing the world.
+ * @param xdim The width of the world.
+ * @param ydim The height of the world.
+ * @param cellXSize The size of each cell in the x-direction.
+ * @param cellYSize The size of each cell in the y-direction.
+ */
 void renderWorld(sf::RenderWindow& window, Organism** worldArray, int xdim, int ydim, int cellXSize, int cellYSize)
 {
     window.clear(sf::Color(0, 0, 255));
@@ -168,6 +201,19 @@ void renderWorld(sf::RenderWindow& window, Organism** worldArray, int xdim, int 
     window.display();
 }
 
+
+/**
+ * @brief Updates the world according to the rules of the Wa-Tor simulation.
+ * @param worldArray The 2D array representing the world.
+ * @param xdim The width of the world.
+ * @param ydim The height of the world.
+ * @param fishBreed The age at which fish can reproduce.
+ * @param sharkBreed The age at which sharks can reproduce.
+ * @param starve The number of turns a shark can survive without eating.
+ * @param gridSize The size of the grid for multi-threading.
+ * @param numThreads The number of threads to use for updating.
+ */
+ 
 void updateWorld(Organism** worldArray, int xdim, int ydim, int fishBreed, int sharkBreed, int starve, int gridSize, int numThreads)
 {
     // Loop through each cell in the world

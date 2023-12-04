@@ -1,6 +1,5 @@
-# Joseph Kehoe
-# This is very basic. It is just here to show you a simple sfml graphics display that you can use.
-# I expect better from you!
+#Ming Kit Choy
+# This is a Makefile for building SFML programs.
 
 CXX = g++
 CPPFILES1= test1.cpp
@@ -13,21 +12,33 @@ EXE1= prog1
 EXE2= prog2
 EXE3= prog3
 
-OBJS=$(subst .cpp,.o,$(SRCS))
+# Automatically generate dependency files
+DEPENDENCIES = $(CPPFILES1:.cpp=.d) $(CPPFILES2:.cpp=.d) $(CPPFILES3:.cpp=.d)
 
-#This rule says that each .o file depends on a .cpp file of the same name
-#This is actually built into Make but anyways...
+# Include the dependency files
+-include $(DEPENDENCIES)
+
+# This rule says that each .o file depends on a .cpp file of the same name
+# This is actually built into Make but anyways...
 %.o: %.cpp
 	$(CXX) -c -o $@ $< $(CPPFLAGS) $(DEBUGFLAGS)
+	$(CXX) -MM -MT $@ $< >> $*.d
 
+ALL: $(EXE1) $(EXE2) $(EXE3)
 
-ALL: $(OBJS)
-	$(CXX) $(CPPFILES1) -o $(EXE1) $(LDFLAGS)
-	$(CXX) $(CPPFILES2) -o $(EXE2) $(LDFLAGS)
-	$(CXX) $(CPPFILES3) -o $(EXE3) $(LDFLAGS)
+$(EXE1): $(CPPFILES1:.cpp=.o)
+	$(CXX) $^ -o $@ $(LDFLAGS)
 
+$(EXE2): $(CPPFILES2:.cpp=.o)
+	$(CXX) $^ -o $@ $(LDFLAGS)
 
+$(EXE3): $(CPPFILES3:.cpp=.o)
+	$(CXX) $^ -o $@ $(LDFLAGS)
 
-#$(CXX) $(OBJS) -o $(EXE) $(LDFLAGS)
-#g++ test.cpp -I/opt/homebrew/Cellar/sfml/2.6.1/include -o prog  -lsfml-graphics -lsfml-window -lsfml-system
-#g++ test.cpp -I/opt/homebrew/Cellar/sfml/2.6.1/include -o prog -L/opt/homebrew/Cellar/sfml/2.6.1/lib -lsfml-graphics -lsfml-window -lsfml-system
+# Clean up generated files
+clean:
+	rm -f $(EXE1) $(EXE2) $(EXE3) $(OBJS) $(DEPENDENCIES)
+
+# This rule generates documentation using Doxygen
+doxygen:
+	doxygen Doxyfile
